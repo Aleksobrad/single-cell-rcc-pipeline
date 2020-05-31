@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AggregationStatus s_v="1" ref="ref0">
+ <V>1</V>
+ <Current>0</Current>
+ <Data ref="ref1">
+  <Data-i ref="ref2">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[4885,46302].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[4885,46302]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref3">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[7917,50405].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[7917,50405]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref4">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[8478,42038].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[8478,42038]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref5">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[9626,56271].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[9626,56271]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref6">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[10576,57230].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[10576,57230]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref7">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[11238,55244].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[11238,55244]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref8">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[11901,57432].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[11901,57432]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref9">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[16317,43798].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[16317,43798]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref10">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\SP19-3695\SP19-3695_TrainingImages\Pt-7_SP19-3695_h__200309_[19505,44318].im3</Source>
+   <Directory></Directory>
+   <Name>Pt-7_SP19-3695_h__200309_[19505,44318]</Name>
+   <Included>true</Included>
+  </Data-i>
+ </Data>
+</AggregationStatus>

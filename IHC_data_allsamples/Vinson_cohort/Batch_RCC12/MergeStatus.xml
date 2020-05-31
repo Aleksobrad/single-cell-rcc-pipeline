@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AggregationStatus s_v="1" ref="ref0">
+ <V>1</V>
+ <Current>0</Current>
+ <Data ref="ref1">
+  <Data-i ref="ref2">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[8017,48796].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[8017,48796]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref3">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[8115,52692].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[8115,52692]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref4">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[8823,51992].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[8823,51992]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref5">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[8883,54382].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[8883,54382]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref6">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[10779,52246].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[10779,52246]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref7">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[11403,46911].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[11403,46911]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref8">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[12297,53896].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[12297,53896]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref9">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[12743,51297].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[12743,51297]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref10">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC12\RCC12_TrainingImages\RCC-12_h__200309_[15358,51349].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-12_h__200309_[15358,51349]</Name>
+   <Included>true</Included>
+  </Data-i>
+ </Data>
+</AggregationStatus>

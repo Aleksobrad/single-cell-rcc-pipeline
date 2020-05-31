@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AggregationStatus s_v="1" ref="ref0">
+ <V>1</V>
+ <Current>0</Current>
+ <Data ref="ref1">
+  <Data-i ref="ref2">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[8627,48850].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[8627,48850]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref3">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[9878,41404].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[9878,41404]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref4">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[12401,38669].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[12401,38669]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref5">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[12711,42160].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[12711,42160]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref6">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[14791,42148].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[14791,42148]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref7">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[15691,47756].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[15691,47756]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref8">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[16138,40785].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[16138,40785]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref9">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[18237,43436].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[18237,43436]</Name>
+   <Included>true</Included>
+  </Data-i>
+  <Data-i ref="ref10">
+   <V>2</V>
+   <Source>D:\1912-CDR01 RCC\Analysis\Rcc samples\RCC7\RCC7_TrainingImages\RCC-7_h__200309_[19420,48616].im3</Source>
+   <Directory></Directory>
+   <Name>RCC-7_h__200309_[19420,48616]</Name>
+   <Included>true</Included>
+  </Data-i>
+ </Data>
+</AggregationStatus>
