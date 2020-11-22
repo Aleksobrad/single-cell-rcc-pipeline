@@ -107,66 +107,48 @@ sil_subsample_v3=function(mat,clust){
 
 #Function to draw heatmap of genes in seurat object dat, with cluster labels clust
 #seurat object must have labels "tissue" and "patient" 
-geneHeatmap=function(dat,clust,genes,genes_by_cluster=T,n_top_genes_per_cluster=5){
+geneHeatmap=function(dat,clust,genes,genes_by_cluster=T,n_top_genes_per_cluster=5,viper=F,color_palette=NA,scaled=F){
   identities <- levels(clust)
-  my_color_palette <- hue_pal()(length(identities))
+  if(is.na(color_palette)){my_color_palette <- hue_pal()(length(identities))}
+  else{my_color_palette=color_palette}
   features=genes
   i=sample(1:ncol(dat),min(10000,ncol(dat)),replace = F)
-  x=dat[["SCT"]]@data[features,i]
-  df <- data.frame(clust[i],dat$tissue[i],dat$patient[i])
+  if(viper==F){x=dat[["SCT"]]@data[features,i]}
+  if(viper==T){x=dat[["RNA"]]@data[features,i]}
+  #df <- data.frame(clust[i],dat$tissue[i],dat$patient[i])
+  df <- data.frame(clust[i],dat$tissue[i])
   rownames(df)=colnames(x)
-  colnames(df)=c("cluster","tissue","patient")
-  anno_colors <- list(cluster = my_color_palette)
+  #colnames(df)=c("cluster","tissue","patient")
+  colnames(df)=c("cluster","tissue")
+  anno_colors <- list(cluster = my_color_palette,tissue=c("cornflowerblue","coral3"))
   names(anno_colors$cluster) <- levels(df$cluster)
-  o=order(df$cluster,df$tissue,df$patient)
+  names(anno_colors$tissue)<-c("Normal","Tumor")
+  #o=order(df$cluster,df$tissue,df$patient)
+  o=order(df$cluster,df$tissue)
   x=x[,o]
   df=df[o,]
   quantile_breaks <- function(xs, n = 10) {
     breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
     breaks[!duplicated(breaks)]
   }
-  mat_breaks <- quantile_breaks(as.matrix(apply(x,1,function(x){(x-mean(x))/sd(x)})), n = 30)
+  #mat_breaks <- quantile_breaks(as.matrix(apply(x,1,function(x){(x-mean(x))/sd(x)})), n = 30)
+  if(scaled==F){t=as.matrix(apply(x,1,function(x){(x-mean(x))/sd(x)}))}
+  if(scaled==T){t=as.matrix(x)}
+  mat_breaks <- c(quantile_breaks(t[which(t<0)], n = 10),0,quantile_breaks(t[which(t>0)], n = 10))
+  mat_breaks=mat_breaks[2:(length(mat_breaks)-1)] #restrict range of data to quantiles 5%-95%, extreme values excluded
   if(genes_by_cluster){
     anno_colors$group=anno_colors$cluster
     anno_row=data.frame(group=unlist(lapply(unique(df$cluster),function(x){rep(x,n_top_genes_per_cluster)})))
     gene_names=rownames(x)
     rownames(x)=1:nrow(x)
-    pheatmap(x, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_row = anno_row,annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 10,show_colnames = F,annotation_colors = anno_colors,scale="row",gaps_row=(2:length(unique(clust))-1)*n_top_genes_per_cluster,annotation_names_row = F,labels_row=gene_names,row_annotation_legend=F)
+    if(!scaled){pheatmap(x, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_row = anno_row,annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 10,show_colnames = F,annotation_colors = anno_colors,scale="row",gaps_row=(2:length(unique(clust))-1)*n_top_genes_per_cluster,annotation_names_row = F,labels_row=gene_names,row_annotation_legend=F)}
+    if(scaled){pheatmap(x, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_row = anno_row,annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 10,show_colnames = F,annotation_colors = anno_colors,gaps_row=(2:length(unique(clust))-1)*n_top_genes_per_cluster,annotation_names_row = F,labels_row=gene_names,row_annotation_legend=F)}
   }
-  else{pheatmap(x, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 8,show_colnames = F,annotation_colors = anno_colors,scale="row")}
+  else{
+    if(!scaled){pheatmap(x, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 8,show_colnames = F,annotation_colors = anno_colors,scale="row")}
+    if(scaled){pheatmap(x, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 8,show_colnames = F,annotation_colors = anno_colors)}
+  }
 }
-
-#Function to draw heatmap of viper proteins in seurat object dat, with cluster labels clust
-#seurat object must have labels "tissue" and "patient", as well as "gene_clustering". Rows are not scaled.  
-geneHeatmap_viper=function(dat,clust,genes,genes_by_cluster=T,n_top_genes_per_cluster=5){
-  identities <- levels(clust)
-  my_color_palette <- hue_pal()(length(identities))
-  features=genes
-  i=sample(1:ncol(dat),min(1000,ncol(dat)),replace = F)
-  x=dat@assays$RNA@scale.data[features,i]
-  df <- data.frame(clust[i],dat$tissue[i],dat$patient[i],dat$gene_clustering[i])
-  rownames(df)=colnames(x)
-  colnames(df)=c("cluster","tissue","patient","geneexp_cluster")
-  anno_colors <- list(cluster = my_color_palette)
-  names(anno_colors$cluster) <- levels(df$cluster)
-  o=order(df$cluster,df$tissue,df$patient)
-  x=x[,o]
-  df=df[o,]
-  quantile_breaks <- function(xs, n = 10) {
-    breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
-    breaks[!duplicated(breaks)]
-  }
-  mat_breaks <- quantile_breaks(as.matrix(x), n = 30)
-  if(genes_by_cluster){
-    anno_colors$group=anno_colors$cluster
-    anno_row=data.frame(group=unlist(lapply(unique(df$cluster),function(x){rep(x,n_top_genes_per_cluster)})))
-    gene_names=rownames(x)
-    rownames(x)=1:nrow(x)
-    pheatmap(x, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_row = anno_row,annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 10,show_colnames = F,annotation_colors = anno_colors,scale="none",gaps_row=(2:length(unique(clust))-1)*n_top_genes_per_cluster,annotation_names_row = F,labels_row=gene_names,row_annotation_legend=F)
-  }
-  else{pheatmap(x, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 8,show_colnames = F,annotation_colors = anno_colors)}
-}
-
 
 #' Identifies MRs for given data using stouffer integration.
 #' 
@@ -911,7 +893,7 @@ for(iter in 1:length(seurat_list_cd45pos)){
   patientnumber=unique(s$patient)
   
   s <- PercentageFeatureSet(s, pattern = "^MT-", col.name = "percent.mt")
-  tiff(paste(patientnumber,"QCPlot_CD45pos.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"QCPlot_CD45pos.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 600)
   plot(VlnPlot(s, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3,pt.size=0,group.by="tissue"))
   dev.off()
   s <- subset(s, subset = percent.mt < 10 & nCount_RNA > 1000 & nCount_RNA < 15000)
@@ -926,7 +908,7 @@ for(iter in 1:length(seurat_list_cd45pos)){
   means=out[[1]]
   sd=out[[2]]
   x=seq(0.01,1,by=0.01)
-  tiff(paste(patientnumber,"louvain_resolution_CD45pos.tiff",sep = "_"), width = 6, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"louvain_resolution_CD45pos.tiff",sep = "_"), width = 6, height = 6, units = 'in', res = 600)
   errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
   lines(x,means)
   best=tail(x[which(means==max(means))],n=1)
@@ -934,15 +916,15 @@ for(iter in 1:length(seurat_list_cd45pos)){
   dev.off()
   s$seurat_clusters=s@meta.data[,which(colnames(s@meta.data)==paste("SCT_snn_res.",best,sep=""))]
   Idents(s) <- "seurat_clusters"
-  tiff(paste(patientnumber,"louvain_split_umap_CD45pos.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"louvain_split_umap_CD45pos.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 600)
   plot(DimPlot(s,reduction="umap",group.by="seurat_clusters",split.by="tissue"))
   dev.off()
-  tiff(paste(patientnumber,"louvain_umap_CD45pos.tiff",sep = "_"), width = 6, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"louvain_umap_CD45pos.tiff",sep = "_"), width = 6, height = 6, units = 'in', res = 600)
   plot(DimPlot(s, reduction = "umap",label = TRUE) + NoLegend())
   dev.off()
   markers <- FindAllMarkers(s, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5,test.use = "MAST")
   top10 <- markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
-  tiff(paste(patientnumber,"louvain_heatmap_CD45pos.tiff",sep = "_"), width = 8, height = 8, units = 'in', res = 100)
+  tiff(paste(patientnumber,"louvain_heatmap_CD45pos.tiff",sep = "_"), width = 8, height = 8, units = 'in', res = 600)
   geneHeatmap(s,s$seurat_clusters,top10$gene)
   dev.off()
   l=s$blueprint_labels
@@ -950,7 +932,7 @@ for(iter in 1:length(seurat_list_cd45pos)){
   l[which(l %in% names(which(table(l)<20)))]=NA
   s$l=l
   Idents(s) <- "l"
-  tiff(paste(patientnumber,"singler_umap_CD45pos.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"singler_umap_CD45pos.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 600)
   plot(DimPlot(s, reduction = "umap",label=TRUE))
   dev.off()
   saveRDS(s, file = paste(patientnumber,"CD45pos.rds",sep="_"))
@@ -972,7 +954,7 @@ for(iter in 1:length(seurat_list_cd45neg)){
   patientnumber=unique(s2$patient)
   
   s2 <- PercentageFeatureSet(s2, pattern = "^MT-", col.name = "percent.mt")
-  tiff(paste(patientnumber,"QCPlot_CD45neg.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"QCPlot_CD45neg.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 600)
   plot(VlnPlot(s2, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3,pt.size=0,group.by="tissue"))
   dev.off()
   s2 <- subset(s2, subset = percent.mt < 10 & nCount_RNA > 1000 & nCount_RNA < 15000)
@@ -987,7 +969,7 @@ for(iter in 1:length(seurat_list_cd45neg)){
   means=out[[1]]
   sd=out[[2]]
   x=seq(0.01,1,by=0.01)
-  tiff(paste(patientnumber,"louvain_resolution_CD45neg.tiff",sep = "_"), width = 6, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"louvain_resolution_CD45neg.tiff",sep = "_"), width = 6, height = 6, units = 'in', res = 600)
   errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
   lines(x,means)
   best=tail(x[which(means==max(means))],n=1)
@@ -995,15 +977,15 @@ for(iter in 1:length(seurat_list_cd45neg)){
   dev.off()
   s2$seurat_clusters=s2@meta.data[,which(colnames(s2@meta.data)==paste("SCT_snn_res.",best,sep=""))]
   Idents(s2) <- "seurat_clusters"
-  tiff(paste(patientnumber,"louvain_split_umap_CD45neg.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"louvain_split_umap_CD45neg.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 600)
   plot(DimPlot(s2,reduction="umap",group.by="seurat_clusters",split.by="tissue"))
   dev.off()
-  tiff(paste(patientnumber,"louvain_umap_CD45neg.tiff",sep = "_"), width = 6, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"louvain_umap_CD45neg.tiff",sep = "_"), width = 6, height = 6, units = 'in', res = 600)
   plot(DimPlot(s2, reduction = "umap",label = TRUE) + NoLegend())
   dev.off()
   markers <- FindAllMarkers(s2, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5,test.use = "MAST")
   top10 <- markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
-  tiff(paste(patientnumber,"louvain_heatmap_CD45neg.tiff",sep = "_"), width = 8, height = 8, units = 'in', res = 100)
+  tiff(paste(patientnumber,"louvain_heatmap_CD45neg.tiff",sep = "_"), width = 8, height = 8, units = 'in', res = 600)
   geneHeatmap(s2,s2$seurat_clusters,top10$gene)
   dev.off()
   l=s2$blueprint_labels
@@ -1011,7 +993,7 @@ for(iter in 1:length(seurat_list_cd45neg)){
   l[which(l %in% names(which(table(l)<20)))]=NA
   s2$l=l
   Idents(s2) <- "l"
-  tiff(paste(patientnumber,"singler_umap_CD45neg.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 100)
+  tiff(paste(patientnumber,"singler_umap_CD45neg.tiff",sep = "_"), width = 8, height = 6, units = 'in', res = 600)
   plot(DimPlot(s2, reduction = "umap",label=TRUE))
   dev.off()
   saveRDS(s2, file = paste(patientnumber,"CD45neg.rds",sep="_"))
@@ -1074,7 +1056,7 @@ out=sil_subsample_v2(mat,clust)
 means=out[[1]]
 sd=out[[2]]
 x=seq(0.01,1,by=0.01)
-tiff("cd45pos_merged_louvain_resolution_seurat.tiff", width = 6, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_louvain_resolution_seurat.tiff", width = 6, height = 6, units = 'in', res = 600)
 errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
 lines(x,means)
 best=tail(x[which(means==max(means))],n=1)
@@ -1112,26 +1094,27 @@ Idents(cd45pos.integrated) <- "seurat_clusters"
 cd45pos.integrated$seurat_clusters=mapvalues(cd45pos.integrated$seurat_clusters, from = 1:length(unique(cd45pos.integrated$seurat_clusters)), to = c("CD4 T-cell","Treg","CD8 T-cell", "NK cell 1", "NK cell 2","Macrophage","Monocyte","B cell","Misc.","Mast cell","Plasma cell"))
 Idents(cd45pos.integrated) <- "seurat_clusters"
 #
-tiff("cd45pos_merged_louvain_split_umap_seurat.tiff", width = 10, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45pos.integrated,reduction="umap",group.by="seurat_clusters",split.by="tissue") + NoLegend())
+tiff("cd45pos_merged_louvain_split_umap_seurat.tiff", width = 10, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45pos.integrated,reduction="umap",group.by="seurat_clusters",split.by="tissue",cols = c("darkgoldenrod2","darkorange3","mediumorchid2","forestgreen","chartreuse3","cyan4","cyan2","lightsteelblue3","cornsilk3","deeppink3","lightsteelblue4")) + NoLegend())
 dev.off()
-tiff("cd45pos_merged_louvain_split_patient_umap_seurat.tiff", width = 8, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45pos.integrated,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3))
+tiff("cd45pos_merged_louvain_split_patient_umap_seurat.tiff", width = 8, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45pos.integrated,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3,cols = c("darkgoldenrod2","darkorange3","mediumorchid2","forestgreen","chartreuse3","cyan4","cyan2","lightsteelblue3","cornsilk3","deeppink3","lightsteelblue4")))
 dev.off()
-tiff("cd45pos_merged_louvain_umap_seurat.tiff", width = 6, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45pos.integrated, reduction = "umap",label = TRUE,label.size=7,repel=T) + NoLegend())
+tiff("cd45pos_merged_louvain_umap_seurat.tiff", width = 6, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45pos.integrated, reduction = "umap",label = TRUE,label.size=7,repel=T,cols = c("darkgoldenrod2","darkorange3","mediumorchid2","forestgreen","chartreuse3","cyan4","cyan2","lightsteelblue3","cornsilk3","deeppink3","lightsteelblue4")) + NoLegend())
 dev.off()
 markers <- FindAllMarkers(cd45pos.integrated, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5,test.use = "MAST")
-top10 <- markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
-tiff("cd45pos_merged_louvain_heatmap_seurat.tiff", width = 8, height = 8, units = 'in', res = 100)
-geneHeatmap(cd45pos.integrated,cd45pos.integrated$seurat_clusters,top10$gene)
+top10 <- markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
+tiff("cd45pos_merged_louvain_heatmap_seurat.tiff", width = 8, height = 8, units = 'in', res = 600)
+#geneHeatmap(cd45pos.integrated,cd45pos.integrated$seurat_clusters,top10$gene)
+geneHeatmap(cd45pos.integrated,cd45pos.integrated$seurat_clusters,top10$gene,color_palette=c("darkgoldenrod2","darkorange3","mediumorchid2","forestgreen","chartreuse3","cyan4","cyan2","lightsteelblue3","cornsilk3","deeppink3","lightsteelblue4"))
 dev.off()
 l=cd45pos.integrated$blueprint_labels
 l[which(cd45pos.integrated$blueprint_pvals>0.1)]=NA
 l[which(l %in% names(which(table(l)<150)))]=NA
 cd45pos.integrated$l=l
 Idents(cd45pos.integrated) <- "l"
-tiff("cd45pos_merged_singler_umap_seurat.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_singler_umap_seurat.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45pos.integrated, reduction = "umap",label=TRUE,repel=T,label.size=5)+NoLegend())
 dev.off()
 saveRDS(cd45pos.integrated, file = "cd45pos_merged_seurat.rds")
@@ -1147,7 +1130,7 @@ out=sil_subsample_v2(mat,clust)
 means=out[[1]]
 sd=out[[2]]
 x=seq(0.01,1,by=0.01)
-tiff("cd45neg_merged_louvain_resolution_seurat.tiff", width = 6, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_louvain_resolution_seurat.tiff", width = 6, height = 6, units = 'in', res = 600)
 errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
 lines(x,means)
 best=tail(x[which(means==max(means))],n=1)
@@ -1159,26 +1142,26 @@ Idents(cd45neg.integrated) <- "seurat_clusters"
 cd45neg.integrated$seurat_clusters=mapvalues(cd45neg.integrated$seurat_clusters, from = 1:length(unique(cd45neg.integrated$seurat_clusters))-1, to = c("Epithelial","Endothelial","Fibroblast", "M2 Macrophage", "Adipocyte"))
 Idents(cd45neg.integrated) <- "seurat_clusters"
 #
-tiff("cd45neg_merged_louvain_split_umap_seurat.tiff", width = 10, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45neg.integrated,reduction="umap",group.by="seurat_clusters",split.by="tissue") + NoLegend())
+tiff("cd45neg_merged_louvain_split_umap_seurat.tiff", width = 10, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45neg.integrated,reduction="umap",group.by="seurat_clusters",split.by="tissue",cols = c("chocolate2","chartreuse3","gold2","lemonchiffon3","pink1")) + NoLegend())
 dev.off()
-tiff("cd45neg_merged_louvain_split_patient_umap_seurat.tiff", width = 8, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45neg.integrated,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3))
+tiff("cd45neg_merged_louvain_split_patient_umap_seurat.tiff", width = 8, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45neg.integrated,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3,cols = c("chocolate2","chartreuse3","gold2","lemonchiffon3","pink1")))
 dev.off()
-tiff("cd45neg_merged_louvain_umap_seurat.tiff", width = 6, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45neg.integrated, reduction = "umap",label = TRUE,label.size=7,repel=T) + NoLegend())
+tiff("cd45neg_merged_louvain_umap_seurat.tiff", width = 6, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45neg.integrated, reduction = "umap",label = TRUE,label.size=7,repel=T,cols = c("chocolate2","chartreuse3","gold2","lemonchiffon3","pink1")) + NoLegend())
 dev.off()
 markers <- FindAllMarkers(cd45neg.integrated, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5,test.use = "MAST")
 top10 <- markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
-tiff("cd45neg_merged_louvain_heatmap_seurat.tiff", width = 8, height = 8, units = 'in', res = 100)
-geneHeatmap(cd45neg.integrated,cd45neg.integrated$seurat_clusters,top10$gene)
+tiff("cd45neg_merged_louvain_heatmap_seurat.tiff", width = 8, height = 8, units = 'in', res = 600)
+geneHeatmap(cd45neg.integrated,cd45neg.integrated$seurat_clusters,top10$gene,color_palette = c("chocolate2","chartreuse3","gold2","lemonchiffon3","pink1"))
 dev.off()
 l=cd45neg.integrated$blueprint_labels
 l[which(cd45neg.integrated$blueprint_pvals>0.1)]=NA
 l[which(l %in% names(which(table(l)<1400)))]=NA
 cd45neg.integrated$l=l
 Idents(cd45neg.integrated) <- "l"
-tiff("cd45neg_merged_singler_umap_seurat.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_singler_umap_seurat.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45neg.integrated, reduction = "umap",label=TRUE,repel=T,label.size=5)+NoLegend())
 dev.off()
 saveRDS(cd45neg.integrated, file = "cd45neg_merged_seurat.rds")
@@ -1248,7 +1231,7 @@ out=sil_subsample_v2(mat,clust)
 means=out[[1]]
 sd=out[[2]]
 x=seq(0.01,1,by=0.01)
-tiff("cd45pos_merged_louvain_resolution_seurat_meta.tiff", width = 6, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_louvain_resolution_seurat_meta.tiff", width = 6, height = 6, units = 'in', res = 600)
 errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
 lines(x,means)
 best=tail(x[which(means==max(means))],n=1)
@@ -1256,18 +1239,18 @@ legend("topright",paste("Best",best,sep = " = "))
 dev.off()
 cd45pos.integrated$seurat_clusters=cd45pos.integrated@meta.data[,which(colnames(cd45pos.integrated@meta.data)==paste("integrated_snn_res.",best,sep=""))]
 Idents(cd45pos.integrated) <- "seurat_clusters"
-tiff("cd45pos_merged_louvain_split_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_louvain_split_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45pos.integrated,reduction="umap",group.by="seurat_clusters",split.by="tissue"))
 dev.off()
-tiff("cd45pos_merged_louvain_split_patient_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_louvain_split_patient_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45pos.integrated,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3))
 dev.off()
-tiff("cd45pos_merged_louvain_umap_seurat_meta.tiff", width = 6, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_louvain_umap_seurat_meta.tiff", width = 6, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45pos.integrated, reduction = "umap",label = TRUE) + NoLegend())
 dev.off()
 markers <- FindAllMarkers(cd45pos.integrated, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5,test.use = "MAST")
 top10 <- markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
-tiff("cd45pos_merged_louvain_heatmap_seurat_meta.tiff", width = 8, height = 8, units = 'in', res = 100)
+tiff("cd45pos_merged_louvain_heatmap_seurat_meta.tiff", width = 8, height = 8, units = 'in', res = 600)
 geneHeatmap(cd45pos.integrated,cd45pos.integrated$seurat_clusters,top10$gene)
 dev.off()
 l=cd45pos.integrated$blueprint_labels
@@ -1275,7 +1258,7 @@ l[which(cd45pos.integrated$blueprint_pvals>0.1)]=NA
 l[which(l %in% names(which(table(l)<150)))]=NA
 cd45pos.integrated$l=l
 Idents(cd45pos.integrated) <- "l"
-tiff("cd45pos_merged_singler_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_singler_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45pos.integrated, reduction = "umap",label=TRUE))
 dev.off()
 saveRDS(cd45pos.integrated, file = "cd45pos_merged_seurat_meta.rds")
@@ -1301,7 +1284,7 @@ out=sil_subsample_v2(mat,clust)
 means=out[[1]]
 sd=out[[2]]
 x=seq(0.01,1,by=0.01)
-tiff("cd45neg_merged_louvain_resolution_seurat_meta.tiff", width = 6, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_louvain_resolution_seurat_meta.tiff", width = 6, height = 6, units = 'in', res = 600)
 errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
 lines(x,means)
 best=tail(x[which(means==max(means))],n=1)
@@ -1309,18 +1292,18 @@ legend("topright",paste("Best",best,sep = " = "))
 dev.off()
 cd45neg.integrated$seurat_clusters=cd45neg.integrated@meta.data[,which(colnames(cd45neg.integrated@meta.data)==paste("integrated_snn_res.",best,sep=""))]
 Idents(cd45neg.integrated) <- "seurat_clusters"
-tiff("cd45neg_merged_louvain_split_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_louvain_split_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45neg.integrated,reduction="umap",group.by="seurat_clusters",split.by="tissue"))
 dev.off()
-tiff("cd45neg_merged_louvain_split_patient_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_louvain_split_patient_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45neg.integrated,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3))
 dev.off()
-tiff("cd45neg_merged_louvain_umap_seurat_meta.tiff", width = 6, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_louvain_umap_seurat_meta.tiff", width = 6, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45neg.integrated, reduction = "umap",label = TRUE) + NoLegend())
 dev.off()
 markers <- FindAllMarkers(cd45neg.integrated, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5,test.use = "MAST")
 top10 <- markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
-tiff("cd45neg_merged_louvain_heatmap_seurat_meta.tiff", width = 8, height = 8, units = 'in', res = 100)
+tiff("cd45neg_merged_louvain_heatmap_seurat_meta.tiff", width = 8, height = 8, units = 'in', res = 600)
 geneHeatmap(cd45neg.integrated,cd45neg.integrated$seurat_clusters,top10$gene)
 dev.off()
 l=cd45neg.integrated$blueprint_labels
@@ -1328,7 +1311,7 @@ l[which(cd45neg.integrated$blueprint_pvals>0.1)]=NA
 l[which(l %in% names(which(table(l)<1400)))]=NA
 cd45neg.integrated$l=l
 Idents(cd45neg.integrated) <- "l"
-tiff("cd45neg_merged_singler_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_singler_umap_seurat_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45neg.integrated, reduction = "umap",label=TRUE))
 dev.off()
 saveRDS(cd45neg.integrated, file = "cd45neg_merged_seurat_meta.rds")
@@ -1424,7 +1407,7 @@ for(pt in cd45pos_patients){
   means=out[[1]]
   sd=out[[2]]
   x=seq(0.01,1,by=0.01)
-  tiff(paste(pt,"cd45pos_viper_louvain_resolution_anchor.tiff",sep="_"), width = 8, height = 6, units = 'in', res = 100)
+  tiff(paste(pt,"cd45pos_viper_louvain_resolution_anchor.tiff",sep="_"), width = 8, height = 6, units = 'in', res = 600)
   errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
   lines(x,means)
   best=tail(x[which(means==max(means))],n=1)
@@ -1432,7 +1415,7 @@ for(pt in cd45pos_patients){
   dev.off()
   s1_vp_meta_seurat$seurat_clusters=s1_vp_meta_seurat@meta.data[,which(colnames(s1_vp_meta_seurat@meta.data)==paste("RNA_snn_res.",best,sep=""))]
   Idents(s1_vp_meta_seurat) <- "seurat_clusters"
-  tiff(paste(pt,"cd45pos_viper_louvain_umap_anchor.tiff",sep="_"), width = 8, height = 8, units = 'in', res = 100)
+  tiff(paste(pt,"cd45pos_viper_louvain_umap_anchor.tiff",sep="_"), width = 8, height = 8, units = 'in', res = 600)
   plot(DimPlot(s1_vp_meta_seurat, reduction = "umap",label = TRUE) + NoLegend())
   dev.off()
   MRs <- BTTestMRs(s1_vp_meta_seurat@assays$RNA@scale.data, s1_vp_meta_seurat$seurat_clusters)
@@ -1441,7 +1424,7 @@ for(pt in cd45pos_patients){
   s1_vp_meta_seurat$patient=s1$patient[names(s1_vp_meta_seurat$seurat_clusters)]
   s1_vp_meta_seurat$gene_clustering=s1$seurat_clusters[names(s1_vp_meta_seurat$seurat_clusters)]
   s1_vp_meta_seurat$l=s1$l[names(s1_vp_meta_seurat$seurat_clusters)]
-  tiff(paste(pt,"cd45pos_viper_louvain_heatmap_anchor.tiff",sep="_"), width = 8, height = 8, units = 'in', res = 100)
+  tiff(paste(pt,"cd45pos_viper_louvain_heatmap_anchor.tiff",sep="_"), width = 8, height = 8, units = 'in', res = 600)
   geneHeatmap_viper(s1_vp_meta_seurat,s1_vp_meta_seurat$seurat_clusters,top10)
   dev.off()
   saveRDS(s1_vp_meta_seurat, file = paste(pt,"cd45pos_viper_meta_seurat.rds",sep=""))
@@ -1465,7 +1448,7 @@ for(pt in cd45pos_patients){
     means=out[[1]]
     sd=out[[2]]
     x=seq(0.01,1,by=0.01)
-    tiff(paste(pt,"cd45neg_viper_louvain_resolution_anchor.tiff",sep="_"), width = 8, height = 6, units = 'in', res = 100)
+    tiff(paste(pt,"cd45neg_viper_louvain_resolution_anchor.tiff",sep="_"), width = 8, height = 6, units = 'in', res = 600)
     errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
     lines(x,means)
     best=tail(x[which(means==max(means))],n=1)
@@ -1473,7 +1456,7 @@ for(pt in cd45pos_patients){
     dev.off()
     s2_vp_meta_seurat$seurat_clusters=s2_vp_meta_seurat@meta.data[,which(colnames(s2_vp_meta_seurat@meta.data)==paste("RNA_snn_res.",best,sep=""))]
     Idents(s2_vp_meta_seurat) <- "seurat_clusters"
-    tiff(paste(pt,"cd45neg_viper_louvain_umap_anchor.tiff",sep="_"), width = 8, height = 8, units = 'in', res = 100)
+    tiff(paste(pt,"cd45neg_viper_louvain_umap_anchor.tiff",sep="_"), width = 8, height = 8, units = 'in', res = 600)
     plot(DimPlot(s2_vp_meta_seurat, reduction = "umap",label = TRUE) + NoLegend())
     dev.off()
     MRs <- BTTestMRs(s2_vp_meta_seurat@assays$RNA@scale.data, s2_vp_meta_seurat$seurat_clusters)
@@ -1482,7 +1465,7 @@ for(pt in cd45pos_patients){
     s2_vp_meta_seurat$patient=s2$patient[names(s2_vp_meta_seurat$seurat_clusters)]
     s2_vp_meta_seurat$gene_clustering=s2$seurat_clusters[names(s2_vp_meta_seurat$seurat_clusters)]
     s2_vp_meta_seurat$l=s2$l[names(s2_vp_meta_seurat$seurat_clusters)]
-    tiff(paste(pt,"cd45neg_viper_louvain_heatmap_anchor.tiff",sep="_"), width = 8, height = 8, units = 'in', res = 100)
+    tiff(paste(pt,"cd45neg_viper_louvain_heatmap_anchor.tiff",sep="_"), width = 8, height = 8, units = 'in', res = 600)
     geneHeatmap_viper(s2_vp_meta_seurat,s2_vp_meta_seurat$seurat_clusters,top10)
     dev.off()
     saveRDS(s2_vp_meta_seurat, file = paste(pt,"cd45neg_viper_meta_seurat.rds",sep=""))
@@ -1536,7 +1519,7 @@ out=sil_subsample_v2_viper(mat,clust)
 means=out[[1]]
 sd=out[[2]]
 x=seq(0.01,1,by=0.01)
-tiff("cd45pos_merged_louvain_resolution_seurat_viper_meta.tiff", width = 6, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_louvain_resolution_seurat_viper_meta.tiff", width = 6, height = 6, units = 'in', res = 600)
 errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
 lines(x,means)
 best=tail(x[which(means==max(means))],n=1)
@@ -1579,31 +1562,32 @@ Idents(cd45pos) <- "seurat_clusters"
 cd45pos$seurat_clusters=mapvalues(cd45pos$seurat_clusters, from = 1:length(unique(cd45pos$seurat_clusters)), to = c("CD4 T-cell","Treg", "NK cell 1", "NK cell 2","Macrophage","Monocyte 1", "Monocyte 2","Monocyte 3","CD8 T-cell 1","CD8 T-cell 2", "B cell","Mast cell"))
 Idents(cd45pos) <- "seurat_clusters"
 #
-tiff("cd45pos_merged_louvain_split_umap_seurat_viper_meta.tiff", width = 10, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45pos,reduction="umap",group.by="seurat_clusters",split.by="tissue")+NoLegend())
+tiff("cd45pos_merged_louvain_split_umap_seurat_viper_meta.tiff", width = 10, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45pos,reduction="umap",group.by="seurat_clusters",split.by="tissue",cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"))+NoLegend())
 dev.off()
-tiff("cd45pos_merged_louvain_split_patient_umap_seurat_viper_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45pos,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3))
+tiff("cd45pos_merged_louvain_split_patient_umap_seurat_viper_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45pos,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3")))
 dev.off()
-tiff("cd45pos_merged_louvain_umap_seurat_viper_meta.tiff", width = 6, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45pos, reduction = "umap",label = TRUE,label.size=7,repel=T) + NoLegend())
+tiff("cd45pos_merged_louvain_umap_seurat_viper_meta.tiff", width = 6, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45pos, reduction = "umap",label = TRUE,label.size=7,repel=T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3")) + NoLegend())
 dev.off()
 MRs <- BTTestMRs(cd45pos@assays$RNA@scale.data, cd45pos$seurat_clusters)
 top10=MR_UnWrap(MRs, top = 5)
-tiff("cd45pos_merged_louvain_heatmap_seurat_viper_meta.tiff", width = 8, height = 8, units = 'in', res = 100)
-geneHeatmap_viper(cd45pos,cd45pos$seurat_clusters,top10)
+tiff("cd45pos_merged_louvain_heatmap_seurat_viper_meta.tiff", width = 8, height = 8, units = 'in', res = 600)
+geneHeatmap(cd45pos,cd45pos$seurat_clusters,top10,viper = T,scaled = T,color_palette = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"))
 dev.off()
 saveRDS(cd45pos, file = "cd45pos_merged_seurat_viper.rds")
 Idents(cd45pos) <- "l"
-tiff("cd45pos_merged_singler_umap_seurat_viper_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45pos_merged_singler_umap_seurat_viper_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45pos, reduction = "umap",label=TRUE,repel=T,label.size=5)+NoLegend())
 dev.off()
-surfaceMRs <- BTTestMRs(cd45pos@assays$RNA@scale.data[intersect(surfacemarkers,rownames(cd45pos)),], cd45pos$seurat_clusters)
-top10=MR_UnWrap(surfaceMRs, top = 10)
-tiff("cd45pos_merged_louvain_surfaceheatmap_seurat_viper_meta.tiff", width = 8, height = 10, units = 'in', res = 100)
-geneHeatmap_viper(cd45pos,cd45pos$seurat_clusters,top10)
-dev.off()
+#surfaceMRs <- BTTestMRs(cd45pos@assays$RNA@scale.data[intersect(surfacemarkers,rownames(cd45pos)),], cd45pos$seurat_clusters)
+#top10=MR_UnWrap(surfaceMRs, top = 10)
+#tiff("cd45pos_merged_louvain_surfaceheatmap_seurat_viper_meta.tiff", width = 8, height = 10, units = 'in', res = 600)
+#geneHeatmap_viper(cd45pos,cd45pos$seurat_clusters,top10)
+#dev.off()
 rm(list_cd45pos,cd45pos,cd45pos_gene)
+
 
 cd45neg_gene=readRDS("cd45neg_merged_seurat.rds")
 cd45neg=merge(list_cd45neg[[1]],y=list_cd45neg[2:length(list_cd45neg)],project = "RCC_SC_VIPER")
@@ -1622,7 +1606,7 @@ out=sil_subsample_v2_viper(mat,clust)
 means=out[[1]]
 sd=out[[2]]
 x=seq(0.01,1,by=0.01)
-tiff("cd45neg_merged_louvain_resolution_seurat_viper_meta.tiff", width = 6, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_louvain_resolution_seurat_viper_meta.tiff", width = 6, height = 6, units = 'in', res = 600)
 errbar(x,means,means+sd,means-sd,ylab="mean silhouette score",xlab="resolution parameter")
 lines(x,means)
 best=tail(x[which(means==max(means))],n=1)
@@ -1638,32 +1622,98 @@ Idents(cd45neg) <- "seurat_clusters"
 cd45neg$seurat_clusters=mapvalues(cd45neg$seurat_clusters, from = 1:length(unique(cd45neg$seurat_clusters))-1, to = c("Epithelial 1","Fibroblast", "Endothelial", "M2 Macrophage","Epithelial 2","Epithelial 3", "Epithelial 4"))
 Idents(cd45neg) <- "seurat_clusters"
 #
-tiff("cd45neg_merged_louvain_split_umap_seurat_viper_meta.tiff", width = 10, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45neg,reduction="umap",group.by="seurat_clusters",split.by="tissue")+NoLegend())
+tiff("cd45neg_merged_louvain_split_umap_seurat_viper_meta.tiff", width = 10, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45neg,reduction="umap",group.by="seurat_clusters",split.by="tissue",cols = c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon"))+NoLegend())
 dev.off()
-tiff("cd45neg_merged_louvain_split_patient_umap_seurat_viper_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45neg,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3))
+tiff("cd45neg_merged_louvain_split_patient_umap_seurat_viper_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45neg,reduction="umap",group.by="seurat_clusters",split.by="patient",ncol=3,cols = c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon")))
 dev.off()
-tiff("cd45neg_merged_louvain_umap_seurat_viper_meta.tiff", width = 6, height = 6, units = 'in', res = 100)
-plot(DimPlot(cd45neg, reduction = "umap",label = TRUE,label.size=7,repel=T) + NoLegend())
+tiff("cd45neg_merged_louvain_umap_seurat_viper_meta.tiff", width = 6, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45neg, reduction = "umap",label = TRUE,label.size=7,repel=T,cols = c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon")) + NoLegend())
 dev.off()
 MRs <- BTTestMRs(cd45neg@assays$RNA@scale.data, cd45neg$seurat_clusters)
 top10=MR_UnWrap(MRs, top = 5)
-tiff("cd45neg_merged_louvain_heatmap_seurat_viper_meta.tiff", width = 8, height = 8, units = 'in', res = 100)
-geneHeatmap_viper(cd45neg,cd45neg$seurat_clusters,top10)
+tiff("cd45neg_merged_louvain_heatmap_seurat_viper_meta.tiff", width = 8, height = 8, units = 'in', res = 600)
+geneHeatmap(cd45neg,cd45neg$seurat_clusters,top10,viper = T,scaled = T,color_palette = c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon"))
 dev.off()
 saveRDS(cd45neg, file = "cd45neg_merged_seurat_viper.rds")
 Idents(cd45neg) <- "l"
-tiff("cd45neg_merged_singler_umap_seurat_viper_meta.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("cd45neg_merged_singler_umap_seurat_viper_meta.tiff", width = 8, height = 6, units = 'in', res = 600)
 plot(DimPlot(cd45neg, reduction = "umap",label=TRUE,repel=T,label.size=5)+NoLegend())
 dev.off()
-surfaceMRs <- BTTestMRs(cd45neg@assays$RNA@scale.data[intersect(surfacemarkers,rownames(cd45neg)),], cd45neg$seurat_clusters)
-top10=MR_UnWrap(surfaceMRs, top = 10)
-tiff("cd45neg_merged_louvain_surfaceheatmap_seurat_viper_meta.tiff", width = 8, height = 10, units = 'in', res = 100)
-geneHeatmap_viper(cd45neg,cd45neg$seurat_clusters,top10)
-dev.off()
+#surfaceMRs <- BTTestMRs(cd45neg@assays$RNA@scale.data[intersect(surfacemarkers,rownames(cd45neg)),], cd45neg$seurat_clusters)
+#top10=MR_UnWrap(surfaceMRs, top = 10)
+#tiff("cd45neg_merged_louvain_surfaceheatmap_seurat_viper_meta.tiff", width = 8, height = 10, units = 'in', res = 600)
+#geneHeatmap_viper(cd45neg,cd45neg$seurat_clusters,top10)
+#dev.off()
 rm(list_cd45neg,cd45neg,cd45neg_gene)
 
+
+###Violinplots
+Idents(cd45pos)=cd45pos$seurat_clusters
+Idents(cd45neg)=cd45neg$seurat_clusters
+Idents(cd45pos.integrated)=cd45pos.integrated$seurat_clusters
+Idents(cd45neg.integrated)=cd45neg.integrated$seurat_clusters
+tiff("cd45pos_vp_markergene_violinplots.tiff", width = 12, height = 9, units = 'in', res = 600)
+#VlnPlot(cd45pos,c("LILRB5","APOE","FOXP3","LAG3","TOX2","CTLA4","PDCD1","CD8A","CD8B"),ncol = 3,same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+geom_hline(yintercept = 0)
+p1=VlnPlot(cd45pos,"LILRB5",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p2=VlnPlot(cd45pos,"APOE",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p3=VlnPlot(cd45pos,"FOXP3",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p4=VlnPlot(cd45pos,"LAG3",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p5=VlnPlot(cd45pos,"TOX2",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p6=VlnPlot(cd45pos,"CTLA4",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p7=VlnPlot(cd45pos,"PDCD1",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p8=VlnPlot(cd45pos,"CD8A",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p9=VlnPlot(cd45pos,"CD8B",same.y.lims = T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+plot_grid(p1,p2,p3,p4,p5,p6,p7,p8,p9,ncol=3)
+dev.off()
+tiff("cd45neg_vp_markergene_violinplots.tiff", width = 12, height = 3, units = 'in', res = 600)
+#VlnPlot(cd45neg,c("PAX8","PAX2","CA9"),ncol = 3,same.y.lims=T,cols = c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon"),pt.size = 0,combine=T)+geom_hline(yintercept = 0)
+p1=VlnPlot(cd45neg,"PAX8",same.y.lims = T,cols=c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+p2=VlnPlot(cd45neg,"PAX2",same.y.lims = T,cols=c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+cd45neg.integrated=cd45neg.integrated[,colnames(cd45neg)]
+cd45neg.integrated$seurat_clusters=cd45neg$seurat_clusters
+Idents(cd45neg.integrated)=cd45neg.integrated$seurat_clusters
+p3=VlnPlot(cd45neg.integrated,"CA9",same.y.lims = T,cols=c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon"),pt.size = 0,combine=T)+NoLegend()+geom_hline(yintercept = 0)
+plot_grid(p1,p2,p3,ncol=3)
+dev.off()
+tiff("cd45pos_geneexp_markergene_violinplots.tiff", width = 12, height = 6, units = 'in', res = 600)
+VlnPlot(cd45pos.integrated,c("C1QA","C1QB","C1QC","APOE","TREM2"),cols=c("cornflowerblue","coral3"),ncol = 3,same.y.lims=T,split.by="tissue",pt.size = 0) #cols = c("darkgoldenrod2","darkorange3","mediumorchid2","forestgreen","chartreuse3","cyan4","cyan2","lightsteelblue3","cornsilk3","deeppink3","lightsteelblue4")
+dev.off()
+
+
+##UMAP plots colored by alternative clustering
+cd45pos=readRDS("cd45pos_merged_seurat.rds")
+cd45neg=readRDS("cd45neg_merged_seurat.rds")
+Idents(cd45pos) <- "seurat_clusters"
+Idents(cd45neg) <- "seurat_clusters"
+cd45pos_vp=readRDS("cd45pos_merged_seurat_viper.rds")
+cd45neg_vp=readRDS("cd45neg_merged_seurat_viper.rds")
+Idents(cd45pos_vp) <- "seurat_clusters"
+Idents(cd45neg_vp) <- "seurat_clusters"
+cd45pos=cd45pos[,colnames(cd45pos_vp)]
+cd45neg=cd45neg[,colnames(cd45neg_vp)]
+cd45pos_vp$gene_clustering=cd45pos$seurat_clusters
+cd45neg_vp$gene_clustering=cd45neg$seurat_clusters
+cd45pos$seurat_clusters=cd45pos_vp$seurat_clusters
+cd45neg$seurat_clusters=cd45neg_vp$seurat_clusters
+Idents(cd45pos) <- "seurat_clusters"
+Idents(cd45neg) <- "seurat_clusters"
+Idents(cd45pos_vp)="gene_clustering"
+Idents(cd45neg_vp)="gene_clustering"
+tiff("cd45pos_merged_louvain_umap_seurat_vpplot_ColoredByGexCluster.tiff", width = 6, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45pos_vp, reduction = "umap",label = TRUE,label.size=7,repel=T,cols = c("darkgoldenrod2","darkorange3","mediumorchid2","forestgreen","chartreuse3","cyan4","cyan2","lightsteelblue3","cornsilk3","deeppink3","lightsteelblue4")) + NoLegend())
+dev.off()
+tiff("cd45neg_merged_louvain_umap_seurat_vpplot_ColoredByGexCluster.tiff", width = 6, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45neg_vp, reduction = "umap",label = TRUE,label.size=7,repel=T,cols = c("chocolate2","chartreuse3","gold2","lemonchiffon3","pink1")) + NoLegend())
+dev.off()
+tiff("cd45neg_merged_louvain_umap_seurat_geneexpplot_ColoredByVPCluster.tiff", width = 6, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45neg, reduction = "umap",label = TRUE,label.size=7,repel=T,cols = c("chocolate2","gold2","chartreuse3","lemonchiffon3","darkslategray3","coral3","darksalmon")) + NoLegend())
+dev.off()
+tiff("cd45pos_merged_louvain_umap_seurat_geneexpplot_ColoredByVPCluster.tiff", width = 6, height = 6, units = 'in', res = 600)
+plot(DimPlot(cd45pos, reduction = "umap",label = TRUE,label.size=7,repel=T,cols = c("darkgoldenrod2","darkorange3","forestgreen","chartreuse3","cyan4","cyan2","deepskyblue","dodgerblue3","mediumorchid2","maroon2","lightsteelblue3","deeppink3")) + NoLegend())
+dev.off()
+rm(cd45pos,cd45neg,cd45pos_vp,cd45neg_vp)
 
 
 
@@ -1715,6 +1765,7 @@ infercnv_combined@expr.data[1:5,1:5]
 cd45pos=readRDS("cd45pos_merged_seurat.rds")
 cd45pos_vp=readRDS("cd45pos_merged_seurat_viper.rds")
 Idents(cd45pos)="seurat_clusters"
+cd45pos$genexp_clusters=paste("cd45pos",cd45pos$seurat_clusters,sep="_")
 Idents(cd45pos_vp)="seurat_clusters"
 cd45pos=cd45pos[,colnames(cd45pos_vp)]
 cd45pos=cd45pos[,sample(colnames(cd45pos),ncol(cd45pos)/10)]
@@ -1723,6 +1774,7 @@ cd45pos$seurat_clusters=paste("cd45pos",cd45pos_vp$seurat_clusters,sep="_")
 cd45neg=readRDS("cd45neg_merged_seurat.rds")
 cd45neg_vp=readRDS("cd45neg_merged_seurat_viper.rds")
 Idents(cd45neg)="seurat_clusters"
+cd45neg$genexp_clusters=paste("cd45neg",cd45neg$seurat_clusters,sep="_")
 Idents(cd45neg_vp)="seurat_clusters"
 cd45neg=cd45neg[,colnames(cd45neg_vp)]
 cd45neg=cd45neg[,sample(colnames(cd45neg),ncol(cd45neg)/10)]
@@ -1730,21 +1782,24 @@ cd45neg_vp=cd45neg_vp[,colnames(cd45neg)]
 cd45neg$seurat_clusters=paste("cd45neg",cd45neg_vp$seurat_clusters,sep="_")
 cd45pos2=CreateSeuratObject(counts=cd45pos@assays$SCT@counts)
 cd45pos2$seurat_clusters=cd45pos$seurat_clusters
+cd45pos2$genexp_clusters=cd45pos$genexp_clusters
 cd45pos2$cd45=cd45pos$cd45
 cd45neg2=CreateSeuratObject(counts=cd45neg@assays$SCT@counts)
 cd45neg2$seurat_clusters=cd45neg$seurat_clusters
+cd45neg2$genexp_clusters=cd45neg$genexp_clusters
 cd45neg2$cd45=cd45neg$cd45
 combined=merge(cd45pos2,cd45neg2)
-write.table(combined@assays$RNA@counts,file="raw_counts_matrix.txt",sep="\t",quote=F)
-write.table(combined$seurat_clusters,file="annotations.txt",sep="\t",quote=F,col.names = F)
+combined=combined[,order(combined$seurat_clusters)]
+write.table(combined@assays$RNA@counts[,order(combined$seurat_clusters)],file="raw_counts_matrix.txt",sep="\t",quote=F)
+write.table(combined$seurat_clusters[order(combined$seurat_clusters)],file="annotations.txt",sep="\t",quote=F,col.names = F)
 infercnv_combined = CreateInfercnvObject(raw_counts_matrix= 'raw_counts_matrix.txt',
                                          annotations_file='annotations.txt',
-                                         gene_order_file='chromosome_locations_noDupGenename_armloc.txt',
+                                         gene_order_file='/Users/aleksandar/Documents/Documents/MED SCHOOL/summer 2019/chromosome_locations_noDupGenename_armloc.txt',
                                          delim = '\t',
                                          ref_group_names=unique(combined$seurat_clusters[which(combined$cd45=="CD45+")]))
 infercnv_combined = infercnv::run(infercnv_combined,
                                   cutoff=0.1, # cutoff=1 works well for Smart-seq2, and cutoff=0.1 works well for 10x Genomics
-                                  out_dir='infercnv_results_combined_viper', 
+                                  out_dir='infercnv_results_combined_viper_sameorderasgeneexp', 
                                   cluster_by_groups=TRUE, 
                                   denoise=TRUE,
                                   noise_logistic = TRUE, 
@@ -1753,15 +1808,38 @@ infercnv_combined = infercnv::run(infercnv_combined,
                                   up_to_step = 50, 
                                   k_obs_groups = 1, 
                                   HMM_type = 'i6',
-                                  analysis_mode = 'subclusters', 
+                                  analysis_mode = 'samples', 
                                   no_plot = F, 
                                   plot_steps = T,
                                   tumor_subcluster_partition_method = 'qnorm', 
                                   num_threads = 11, 
-                                  debug = F)
-saveRDS(infercnv_combined,"infercnv_combined_viper.rds")
-head(infercnv_combined@gene_order)
-infercnv_combined@expr.data[1:5,1:5]
+                                  debug = F,
+                                  cluster_references=F)
+write.table(combined@assays$RNA@counts[,order(combined$seurat_clusters)],file="raw_counts_matrix.txt",sep="\t",quote=F)
+write.table(combined$genexp_clusters[order(combined$seurat_clusters)],file="annotations.txt",sep="\t",quote=F,col.names = F)
+infercnv_combined = CreateInfercnvObject(raw_counts_matrix= 'raw_counts_matrix.txt',
+                                         annotations_file='annotations.txt',
+                                         gene_order_file='/Users/aleksandar/Documents/Documents/MED SCHOOL/summer 2019/chromosome_locations_noDupGenename_armloc.txt',
+                                         delim = '\t',
+                                         ref_group_names=unique(combined$genexp_clusters[which(combined$cd45=="CD45+")]))
+infercnv_combined = infercnv::run(infercnv_combined,
+                                  cutoff=0.1, # cutoff=1 works well for Smart-seq2, and cutoff=0.1 works well for 10x Genomics
+                                  out_dir='infercnv_results_combined_geneexp_sameorderasviper', 
+                                  cluster_by_groups=TRUE, 
+                                  denoise=TRUE,
+                                  noise_logistic = TRUE, 
+                                  scale_data = FALSE,
+                                  HMM=F, 
+                                  up_to_step = 50, 
+                                  k_obs_groups = 1, 
+                                  HMM_type = 'i6',
+                                  analysis_mode = 'samples', 
+                                  no_plot = F, 
+                                  plot_steps = T,
+                                  tumor_subcluster_partition_method = 'qnorm', 
+                                  num_threads = 11, 
+                                  debug = F,
+                                  cluster_references=F)
 
 
 
@@ -1865,7 +1943,7 @@ quantile_breaks <- function(xs, n = 10) {
   breaks[!duplicated(breaks)]
 }
 mat_breaks <- quantile_breaks(dat, n = 20)
-tiff("clusterfreqs_cd45pos_gene.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("clusterfreqs_cd45pos_gene.tiff", width = 8, height = 6, units = 'in', res = 600)
 pheatmap(dat, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 6,show_colnames = F,display_numbers = T)
 dev.off()
 ##tumor vs normal
@@ -1882,7 +1960,7 @@ dat_barplot$stage=df[rownames(dat_barplot),3]
 library(reshape)
 x <- melt(dat_barplot, id=c("stage"))
 colnames(x)=c("stage","celltype","TumorMinusNormalFreq")
-tiff("clusterfreqs_cd45pos_gene_stage_boxplot.tiff", width = 8, height = 4, units = 'in', res = 100)
+tiff("clusterfreqs_cd45pos_gene_stage_boxplot.tiff", width = 8, height = 4, units = 'in', res = 600)
 ggplot(x, aes(x=celltype, y=TumorMinusNormalFreq,fill=stage)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -1892,7 +1970,7 @@ dat_barplot$grade=df[rownames(dat_barplot),4]
 library(reshape)
 x <- melt(dat_barplot, id=c("grade"))
 colnames(x)=c("grade","celltype","TumorMinusNormalFreq")
-tiff("clusterfreqs_cd45pos_gene_grade_boxplot.tiff", width = 8, height = 4, units = 'in', res = 100)
+tiff("clusterfreqs_cd45pos_gene_grade_boxplot.tiff", width = 8, height = 4, units = 'in', res = 600)
 ggplot(x, aes(x=celltype, y=TumorMinusNormalFreq,fill=grade)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -1921,7 +1999,7 @@ quantile_breaks <- function(xs, n = 10) {
 }
 mat_breaks <- quantile_breaks(dat, n = 20)
 #rownames(dat)=c("epithelial/mesangial","endothelial","fibroblasts","M2 macs","adipocytes")
-tiff("clusterfreqs_cd45neg_gene.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("clusterfreqs_cd45neg_gene.tiff", width = 8, height = 6, units = 'in', res = 600)
 pheatmap(dat, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 6,show_colnames = F,display_numbers = T)
 dev.off()
 ##tumor vs normal
@@ -1938,7 +2016,7 @@ dat_barplot$stage=df[rownames(dat_barplot),3]
 library(reshape)
 x <- melt(dat_barplot, id=c("stage"))
 colnames(x)=c("stage","celltype","TumorMinusNormalFreq")
-tiff("clusterfreqs_cd45neg_gene_stage_boxplot.tiff", width = 8, height = 4, units = 'in', res = 100)
+tiff("clusterfreqs_cd45neg_gene_stage_boxplot.tiff", width = 8, height = 4, units = 'in', res = 600)
 ggplot(x, aes(x=celltype, y=TumorMinusNormalFreq,fill=stage)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -1948,7 +2026,7 @@ dat_barplot$grade=df[rownames(dat_barplot),4]
 library(reshape)
 x <- melt(dat_barplot, id=c("grade"))
 colnames(x)=c("grade","celltype","TumorMinusNormalFreq")
-tiff("clusterfreqs_cd45neg_gene_grade_boxplot.tiff", width = 8, height = 4, units = 'in', res = 100)
+tiff("clusterfreqs_cd45neg_gene_grade_boxplot.tiff", width = 8, height = 4, units = 'in', res = 600)
 ggplot(x, aes(x=celltype, y=TumorMinusNormalFreq,fill=grade)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -1989,7 +2067,7 @@ quantile_breaks <- function(xs, n = 10) {
 }
 mat_breaks <- quantile_breaks(dat, n = 20)
 #rownames(dat)=c("CD4 T-cells","Tregs","NK cells 1","NK cells 2","Macrophages","Monocytes1","Monocytes2","Monocytes3","CD8 T-cells 1","CD8 T-Cells 2","B Cells","Mast Cells")
-tiff("clusterfreqs_cd45pos_viper.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("clusterfreqs_cd45pos_viper.tiff", width = 8, height = 6, units = 'in', res = 600)
 pheatmap(dat, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 6,show_colnames = F,display_numbers = T)
 dev.off()
 ##tumor vs normal
@@ -2006,7 +2084,7 @@ dat_barplot$stage=df[rownames(dat_barplot),3]
 library(reshape)
 x <- melt(dat_barplot, id=c("stage"))
 colnames(x)=c("stage","celltype","TumorMinusNormalFreq")
-tiff("clusterfreqs_cd45pos_vp_stage_boxplot.tiff", width = 8, height = 4, units = 'in', res = 100)
+tiff("clusterfreqs_cd45pos_vp_stage_boxplot.tiff", width = 8, height = 4, units = 'in', res = 600)
 ggplot(x, aes(x=celltype, y=TumorMinusNormalFreq,fill=stage)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -2016,7 +2094,7 @@ dat_barplot$grade=df[rownames(dat_barplot),4]
 library(reshape)
 x <- melt(dat_barplot, id=c("grade"))
 colnames(x)=c("grade","celltype","TumorMinusNormalFreq")
-tiff("clusterfreqs_cd45pos_vp_grade_boxplot.tiff", width = 8, height = 4, units = 'in', res = 100)
+tiff("clusterfreqs_cd45pos_vp_grade_boxplot.tiff", width = 8, height = 4, units = 'in', res = 600)
 ggplot(x, aes(x=celltype, y=TumorMinusNormalFreq,fill=grade)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -2045,7 +2123,7 @@ quantile_breaks <- function(xs, n = 10) {
 }
 mat_breaks <- quantile_breaks(dat, n = 20)
 #rownames(dat)=c("epithelial/mesangial 1","fibroblast","endothelial","M2 macs","epithelial/mesangial 2","epithelial/mesangial 3","epithelial/mesangial 4")
-tiff("clusterfreqs_cd45neg_viper.tiff", width = 8, height = 6, units = 'in', res = 100)
+tiff("clusterfreqs_cd45neg_viper.tiff", width = 8, height = 6, units = 'in', res = 600)
 pheatmap(dat, cluster_rows=FALSE,show_rownames=T,cluster_cols=FALSE, annotation_col=df,breaks=mat_breaks,color = colorRampPalette(colors = c('blue', 'white', 'red'))(length(mat_breaks)),fontsize_row = 6,show_colnames = F,display_numbers = T)
 dev.off()
 ##tumor vs normal
@@ -2062,7 +2140,7 @@ dat_barplot$stage=df[rownames(dat_barplot),3]
 library(reshape)
 x <- melt(dat_barplot, id=c("stage"))
 colnames(x)=c("stage","celltype","TumorMinusNormalFreq")
-tiff("clusterfreqs_cd45neg_vp_stage_boxplot.tiff", width = 8, height = 4, units = 'in', res = 100)
+tiff("clusterfreqs_cd45neg_vp_stage_boxplot.tiff", width = 8, height = 4, units = 'in', res = 600)
 ggplot(x, aes(x=celltype, y=TumorMinusNormalFreq,fill=stage)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -2072,7 +2150,7 @@ dat_barplot$grade=df[rownames(dat_barplot),4]
 library(reshape)
 x <- melt(dat_barplot, id=c("grade"))
 colnames(x)=c("grade","celltype","TumorMinusNormalFreq")
-tiff("clusterfreqs_cd45neg_vp_grade_boxplot.tiff", width = 8, height = 4, units = 'in', res = 100)
+tiff("clusterfreqs_cd45neg_vp_grade_boxplot.tiff", width = 8, height = 4, units = 'in', res = 600)
 ggplot(x, aes(x=celltype, y=TumorMinusNormalFreq,fill=grade)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))

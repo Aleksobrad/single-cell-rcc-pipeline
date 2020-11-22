@@ -57,6 +57,32 @@ stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
 
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=csd
+####
+####
+
 #Patient B: stage 1, grade 2
 #IHC_data_allsamples/Batch_SP18-18677
 #APOE Stroma 3.95 Tumor 4.4
@@ -102,6 +128,32 @@ write.table(x,sep="\t",quote=F)
 stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
+
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
 
 #Patient C: stage 1, grade 2
 #IHC_data_allsamples/Batch_19282
@@ -149,6 +201,32 @@ stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent Normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
 
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
+
 #Patient 1: stage 1, grade 2
 #IHC_data_allsamples/Batch_SP19-994
 #APOE Stroma 1.22 Tumor 1.53
@@ -194,6 +272,32 @@ write.table(x,sep="\t",quote=F)
 stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
+
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
 
 #Patient 2: stage 3, grade 2
 #IHC_data_allsamples/Batch_SP19-1727
@@ -241,6 +345,32 @@ stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent Normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
 
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
+
 #Patient 3: stage 3, grade 1
 #IHC_data_allsamples/Batch_SP19-1994
 #APOE Stroma 2.81 Tumor 2.71
@@ -286,6 +416,32 @@ write.table(x,sep="\t",quote=F)
 stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent Normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
+
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
 
 #Patient 4: stage 1, grade 1
 #IHC_data_allsamples/Batch_SP19-3695
@@ -333,6 +489,32 @@ stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent Normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
 
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
+
 #Patient 5: stage 3, grade 4
 #IHC_data_allsamples/Batch_SP19-9557
 #APOE Stroma 3.47 Tumor 3.07
@@ -378,6 +560,32 @@ write.table(x,sep="\t",quote=F)
 stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
+
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
 
 #Patient 6: stage 1, grade 2
 #IHC_data_allsamples/Batch_SP19-12625
@@ -425,6 +633,32 @@ stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
 
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
+
 #Patient 7: stage 3, grade 3
 #IHC_data_allsamples/Batch_SP19-13364
 #APOE Stroma 2.87 Tumor 2.32
@@ -470,6 +704,32 @@ write.table(x,sep="\t",quote=F)
 stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent Normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
+
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+####
+####
 
 #Patient 8: stage 1, grade 2
 #IHC_data_allsamples/Batch_SP19-14528
@@ -517,7 +777,41 @@ stroma_freqs=rbind(stroma_freqs,x$Stroma)
 tumor_freqs=rbind(tumor_freqs,x$Tumor)
 if(ncol(x)==3){normal_freqs=rbind(normal_freqs,x$`Adjacent normal`)} else{normal_freqs=rbind(normal_freqs,rep(NaN,ncol(normal_freqs)))}
 
-
+####
+####average distance between APOE+Macs to tumor cells vs APOE-Macs to tumor cells
+csd$Phenotype=csd$celltype
+#csd=csd[which(csd$`Tissue Category` == "Stroma"),]
+distances=lapply(unique(csd$`Sample Name`),function(i){find_nearest_distance(csd[which(csd$`Sample Name`==i),],phenotypes="CA9+")})
+d=distances[[1]]
+for(i in 2:length(distances)){
+  d=rbind(d,distances[[i]])
+}
+csd=cbind(csd,d)
+csd$MacrophageType=as.character(csd$Phenotype)
+#csd=csd[which(csd$MacrophageType %in% c("APOE+CD68/CD163+","C1Q+APOE+CD68/CD163+","C1Q+CD68/CD163+","C1Q+TREM2+APOE+CD68/CD163+","C1Q+TREM2+CD68/CD163+","CD68/CD163+","TREM2+APOE+CD68/CD163+","TREM2+CD68/CD163+")),]
+csd$MacrophageType[which(csd$MacrophageType %in% c("CD68/CD163+"))]="CD68/CD163+"
+csd$MacrophageType[which(csd$MacrophageType %in% c("C1Q+TREM2+CD68/CD163+"))]="CD68/CD163+APOE+"
+csd=csd[which(csd$MacrophageType %in% c("CD68/CD163+","CD68/CD163+APOE+")),]
+ggplot(csd, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+")],csd$`Distance to CA9+`[which(csd$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor=rbind(csd_distance_to_tumor,csd)
+ggplot(csd_distance_to_tumor, aes(`Distance to CA9+`, color=MacrophageType)) +
+  geom_density(size=1)
+ggplot(csd_distance_to_tumor, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_boxplot()
+mean(na.exclude(csd_distance_to_tumor$`Distance to CA9+`[which(csd_distance_to_tumor$MacrophageType=="CD68/CD163+")]))
+mean(na.exclude(csd_distance_to_tumor$`Distance to CA9+`[which(csd_distance_to_tumor$MacrophageType=="CD68/CD163+APOE+")]))
+t.test(csd_distance_to_tumor$`Distance to CA9+`[which(csd_distance_to_tumor$MacrophageType=="CD68/CD163+")],csd_distance_to_tumor$`Distance to CA9+`[which(csd_distance_to_tumor$MacrophageType=="CD68/CD163+APOE+")])
+csd_distance_to_tumor$`Distance to CA9+`=log10(csd_distance_to_tumor$`Distance to CA9+`)
+ggplot(csd_distance_to_tumor, aes(MacrophageType,`Distance to CA9+`,color=MacrophageType)) +
+  geom_violin()
+####
+####
 
 ###ggplot visualizations
 #odds ratios of enrichment for each marker in CD68/CD163+ macrophages
@@ -1155,4 +1449,3 @@ recurrence_annotation_ihc$C1Q_CD68CD163_fraction="low"
 recurrence_annotation_ihc$C1Q_CD68CD163_fraction[which(recurrence_annotation_ihc$`C1Q+CD68/CD163+`>res.cut$cutpoint$cutpoint)]="high"
 fit <- survfit(SurvObj ~ C1Q_CD68CD163_fraction, data = recurrence_annotation_ihc, conf.type = "log-log")
 ggsurvplot(fit, data = recurrence_annotation_ihc, pval = T,ylab="Fraction Without Recurrence",xlab="Time (months)",linetype=c("dashed","solid"),palette="jco",risk.table=T,pval.coord = c(90, 0.9))
-
